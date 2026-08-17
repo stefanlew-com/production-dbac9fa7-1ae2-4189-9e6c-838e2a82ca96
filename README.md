@@ -9,7 +9,7 @@ In your `devenv.yaml`:
 ```yaml
 inputs:
   project-kit:
-    url: github:stefanlew-com/production-dbac9fa7-1ae2-4189-9e6c-838e2a82ca96/v1.0.0
+    url: github:stefanlew-com/production-dbac9fa7-1ae2-4189-9e6c-838e2a82ca96/v1.1.0
     flake: false
 imports:
   - project-kit/modules
@@ -25,9 +25,10 @@ In your `devenv.nix`:
 
 ## Options
 
-| Option | Package |
+| Option | Effect |
 |---|---|
-| `project.providers.aws.enable` | `awscli2` |
+| `project.environment` | Deploy target, supplied by the build pipeline. |
+| `project.providers.aws.enable` | Adds `awscli2`. |
 
 ## Versioning
 

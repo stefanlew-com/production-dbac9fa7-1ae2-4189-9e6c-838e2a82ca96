@@ -1,7 +1,10 @@
 { config, lib, pkgs, ... }:
 
 {
-  options.project.providers.aws.enable = lib.mkEnableOption "the AWS CLI";
+  options.project = {
+    environment = lib.mkOption { type = lib.types.str; };
+    providers.aws.enable = lib.mkEnableOption "the AWS CLI";
+  };
 
   config.packages =
     [ pkgs.git ]
