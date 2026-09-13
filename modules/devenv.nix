@@ -1,10 +1,13 @@
 { lib, pkgs, ... }:
 
 let
-  version = "1.3.0";
+  version = "1.4.0";
 in
 {
-  imports = [ ./aws.nix ];
+  imports = [
+    ./aws.nix
+    ./browsers
+  ];
 
   options.project.environment = lib.mkOption { type = lib.types.str; };
 

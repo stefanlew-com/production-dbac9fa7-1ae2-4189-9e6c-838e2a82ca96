@@ -9,7 +9,7 @@ In your `devenv.yaml`:
 ```yaml
 inputs:
   project-kit:
-    url: github:stefanlew-com/production-dbac9fa7-1ae2-4189-9e6c-838e2a82ca96/v1.2.0
+    url: github:stefanlew-com/production-dbac9fa7-1ae2-4189-9e6c-838e2a82ca96/v1.4.0
     flake: false
 imports:
   - project-kit/modules
@@ -53,6 +53,8 @@ In your `devenv.nix`:
 | `project.providers.aws.region` | `null` | Fallback `region` for profiles, `sso_region` for sessions. |
 | `project.providers.aws.output` | `"json"` | Fallback `output` for profiles. |
 | `project.providers.aws.pager` | `""` | Fallback `cli_pager` for profiles. Empty disables the pager. |
+| `project.browsers.chromium.enable` | `false` | Adds `chromium` + `chromedriver`; sets `CHROME_BIN`, `CHROMEWEBDRIVER`. |
+| `project.browsers.firefox.enable` | `false` | Adds `firefox` + `geckodriver`; sets `FIREFOX_BIN`, `GECKOWEBDRIVER`. |
 
 Keys are written as [AWS defines them](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html)
 and a section always wins over a fallback. Sessions also default
@@ -73,6 +75,60 @@ store. Nothing is written to the repository or to `$HOME`.
   session name, so an existing login is reused.
 
 No `AWS_*` variable other than `AWS_CONFIG_FILE` is set or cleared.
+
+## Browsers
+
+```nix
+{
+  project.browsers.chromium.enable = true;
+  project.browsers.firefox.enable = true;
+}
+```
+
+The enabled browsers are also rendered into an ES module at
+`.devenv/state/project-kit/browsers/index.mjs` on shell entry, typed by an
+`index.d.mts` next to it:
+
+```ts
+export interface Browser {
+  readonly binary: string;      // the browser executable
+  readonly driver: string;      // its WebDriver executable
+  readonly capability: { readonly browserName: string; readonly [key: string]: unknown };
+}
+export const chromium: Browser;
+export const firefox: Browser;
+export const browsers: readonly Browser[];   // the enabled ones
+```
+
+[WebdriverIO](https://webdriver.io/):
+
+```ts
+// wdio.conf.ts
+import { browsers } from "./.devenv/state/project-kit/browsers/index.mjs";
+
+export const config: WebdriverIO.Config = {
+  runner: "local",
+  capabilities: browsers.map((b) => b.capability),
+  specs: ["./tests/e2e/**/*.spec.ts"],
+  framework: "mocha",
+  reporters: ["spec"],
+};
+```
+
+Playwright (Chromium only; Playwright does not run a stock Firefox):
+
+```ts
+// playwright.config.ts
+import { chromium } from "./.devenv/state/project-kit/browsers/index.mjs";
+
+export default defineConfig({
+  use: { launchOptions: { executablePath: chromium.binary } },
+});
+```
+
+Capabilities are headless. Spread one to override it, e.g. to add `--no-sandbox`
+in a container that runs as root. After a `devenv update` the module points at
+the new browsers.
 
 ## Versioning
 
